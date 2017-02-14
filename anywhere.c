@@ -1,4 +1,4 @@
-#include "./unp.h"
+#include "./common.h"
 
 #define SERVER_STRING "Server: Anywhere\r\n"
 
@@ -121,14 +121,13 @@ set_header(int sockfd, const char *filepath)
 void
 send_file(int sockfd, FILE *resource)
 {
-    char buf[1024];
+  char buf[1024];
 
+  fgets(buf, sizeof(buf), resource);
+  while (!feof(resource)) {
+    Write(sockfd, buf, strlen(buf));
     fgets(buf, sizeof(buf), resource);
-    while (!feof(resource))
-    {
-        Write(sockfd, buf, strlen(buf));
-        fgets(buf, sizeof(buf), resource);
-    }
+  }
 }
 
 int
@@ -138,7 +137,6 @@ main(int argc, char **argv)
   uint32_t    port = 4000;
   pid_t       childpid;
 	socklen_t			clilen;
-  pthread_t newthread;
 	struct sockaddr_in	cliaddr, servaddr;
 
 	listenfd = Socket(AF_INET, SOCK_STREAM, 0);

@@ -16,7 +16,7 @@
  *warning: passing arg 2 of `connect' discards `const' from pointer target type
  */
 
-#include	"./unp.h"
+#include	"./common.h"
 
 void
 err_sys(const char *info)
@@ -206,27 +206,6 @@ Recv(int fd, void *ptr, size_t nbytes, int flags)
 	return(n);
 }
 
-ssize_t
-Recvfrom(int fd, void *ptr, size_t nbytes, int flags,
-		 struct sockaddr *sa, socklen_t *salenptr)
-{
-	ssize_t		n;
-
-	if ( (n = recvfrom(fd, ptr, nbytes, flags, sa, salenptr)) < 0)
-		err_sys("recvfrom error");
-	return(n);
-}
-
-ssize_t
-Recvmsg(int fd, struct msghdr *msg, int flags)
-{
-	ssize_t		n;
-
-	if ( (n = recvmsg(fd, msg, flags)) < 0)
-		err_sys("recvmsg error");
-	return(n);
-}
-
 int
 Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
        struct timeval *timeout)
@@ -246,49 +225,10 @@ Send(int fd, const void *ptr, size_t nbytes, int flags)
 }
 
 void
-Sendto(int fd, const void *ptr, size_t nbytes, int flags,
-	   const struct sockaddr *sa, socklen_t salen)
-{
-	if (sendto(fd, ptr, nbytes, flags, sa, salen) != (ssize_t)nbytes)
-		err_sys("sendto error");
-}
-
-void
-Sendmsg(int fd, const struct msghdr *msg, int flags)
-{
-	unsigned int	i;
-	ssize_t			nbytes;
-
-	nbytes = 0;	/* must first figure out what return value should be */
-	for (i = 0; i < msg->msg_iovlen; i++)
-		nbytes += msg->msg_iov[i].iov_len;
-
-	if (sendmsg(fd, msg, flags) != nbytes)
-		err_sys("sendmsg error");
-}
-
-void
-Setsockopt(int fd, int level, int optname, const void *optval, socklen_t optlen)
-{
-	if (setsockopt(fd, level, optname, optval, optlen) < 0)
-		err_sys("setsockopt error");
-}
-
-void
 Shutdown(int fd, int how)
 {
 	if (shutdown(fd, how) < 0)
 		err_sys("shutdown error");
-}
-
-int
-Sockatmark(int fd)
-{
-	int		n;
-
-	if ( (n = sockatmark(fd)) < 0)
-		err_sys("sockatmark error");
-	return(n);
 }
 
 /* include Socket */
@@ -302,12 +242,3 @@ Socket(int family, int type, int protocol)
 	return(n);
 }
 /* end Socket */
-
-void
-Socketpair(int family, int type, int protocol, int *fd)
-{
-	int		n;
-
-	if ( (n = socketpair(family, type, protocol, fd)) < 0)
-		err_sys("socketpair error");
-}
