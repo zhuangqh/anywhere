@@ -4,7 +4,8 @@
 #define SERVER_STRING "Server: Anywhere\r\n"
 
 char *base_path = ".";
-struct MIMEItem *et[EXTLEN]; // extension table
+char et_path[PATHLEN];
+struct MIMEItem *et[HASHSIZE]; // extension table
 
 void   accept_request(int);
 void   not_found(int);
@@ -163,6 +164,9 @@ main(int argc, char **argv)
   struct sockaddr_in	cliaddr, servaddr;
 
   get_option(argc, argv, &port, &base_path);
+
+  // may overflow
+  strcat(strcpy(et_path, getenv("HOME")), "/.anywhere/content-type-table");
 
   load_table(et); // load extension table
 

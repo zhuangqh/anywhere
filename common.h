@@ -26,6 +26,8 @@
 #define	MAXLINE		4096	/* max text line length */
 #define	BUFFSIZE	8192	/* buffer size for reads and writes */
 
+#define PATHLEN   256
+
 /* prototypes for our socket wrapper functions */
 int		 Accept(int, SA *, socklen_t *);
 void	 Bind(int, const SA *, socklen_t);

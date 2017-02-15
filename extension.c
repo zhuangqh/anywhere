@@ -1,6 +1,8 @@
 #include "./extension.h"
 #include "./common.h"
 
+extern char et_path[PATHLEN];
+
 void
 load_table(struct MIMEItem **et)
 {
@@ -8,7 +10,6 @@ load_table(struct MIMEItem **et)
     et[i] = NULL;
   }
 
-  const char *et_path = "./extensions";
   FILE *et_file = fopen(et_path, "r");
 
   char extension[MIMELEN], type[MIMELEN];
