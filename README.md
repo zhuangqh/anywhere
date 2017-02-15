@@ -1,4 +1,4 @@
-# HTTP static server
+# Anywhere
 A HTTP static server writern in c
 
 ## How to

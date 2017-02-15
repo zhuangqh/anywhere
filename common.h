@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>

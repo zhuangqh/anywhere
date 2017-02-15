@@ -10,7 +10,7 @@ struct MIMEItem *et[HASHSIZE]; // extension table
 void   accept_request(int);
 void   not_found(int);
 void   set_header(int, const char *);
-void   send_file(int, FILE *);
+void   send_file(int, int);
 void   serve_file(int, const char *);
 void   unimplemented(int);
 
@@ -60,57 +60,49 @@ accept_request(int sockfd)
 void
 not_found(int sockfd)
 {
-  char buf[MAXLINE];
+  char msg[] = 
+  "HTTP/1.1 404 NOT FOUND\r\n"
+  SERVER_STRING
+  "Content-Type: text/plain\r\n"
+  "\r\n"
+  "not found\r\n";
 
-  sprintf(buf, "HTTP/1.1 404 NOT FOUND\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, SERVER_STRING);
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "Content-Type: text/plain\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "not found\r\n");
-  Write(sockfd, buf, strlen(buf));
+  Write(sockfd, msg, strlen(msg));
 }
 
 void
 unimplemented(int sockfd)
 {
-  char buf[MAXLINE];
+  char msg[] =
+  "HTTP/1.1 501 Method Not Implemented\r\n"
+  SERVER_STRING
+  "Content-Type: text/plain\r\n"
+  "\r\n"
+  "method not implemented\r\n";
 
-  sprintf(buf, "HTTP/1.1 501 Method Not Implemented\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, SERVER_STRING);
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "Content-Type: text/plain\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "\r\n");
-  Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "method not implemented\r\n");
-  Write(sockfd, buf, strlen(buf));
+  Write(sockfd, msg, strlen(msg));
 }
 
 void
 serve_file(int sockfd, const char *filepath)
 {
-  FILE *resource = fopen(filepath, "r");
-  
-  if (resource == NULL) {
+  int filefd = open(filepath, O_RDONLY); // open file for read
+
+  if (filefd == -1) {
     not_found(sockfd);
   } else {
     set_header(sockfd, filepath);
-    send_file(sockfd, resource);
+    send_file(sockfd, filefd);
   }
 
-  fclose(resource);
+  Close(filefd);
 }
 
 void
 set_header(int sockfd, const char *filepath)
 {
-  char buf[1024];
-  char content_type[1024];
+  char buf[MAXLINE];
+  char content_type[MIMELEN];
 
   set_extension(et, filepath, content_type);
 
@@ -125,14 +117,13 @@ set_header(int sockfd, const char *filepath)
 }
 
 void
-send_file(int sockfd, FILE *resource)
+send_file(int sockfd, int filefd)
 {
-  char buf[1024];
+  char buf[MAXLINE];
+  int cnt = 0;
 
-  fgets(buf, sizeof(buf), resource);
-  while (!feof(resource)) {
-    Write(sockfd, buf, strlen(buf));
-    fgets(buf, sizeof(buf), resource);
+  while ((cnt = read(filefd, buf, MAXLINE)) > 0) {
+    Write(sockfd, buf, cnt);
   }
 }
 
@@ -170,7 +161,7 @@ main(int argc, char **argv)
 
   load_table(et); // load extension table
 
-  printf("server running at port `%d` with `%s` as base path\n", port, base_path);
+  printf("server running at `http://localhost:%d` with `%s` as base path\n", port, base_path);
 
   listenfd = Socket(AF_INET, SOCK_STREAM, 0);
 
