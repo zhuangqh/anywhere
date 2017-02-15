@@ -158,7 +158,7 @@ int
 main(int argc, char **argv)
 {
   int         listenfd, connfd;
-  uint32_t    port = 4000;
+  uint32_t    port = 8000;
   pid_t       childpid;
   socklen_t   clilen;
   struct sockaddr_in	cliaddr, servaddr;
