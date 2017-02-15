@@ -1,8 +1,10 @@
 #include "./common.h"
+#include "./extension.h"
 
 #define SERVER_STRING "Server: Anywhere\r\n"
 
 char *base_path = ".";
+struct MIMEItem *et[EXTLEN]; // extension table
 
 void   accept_request(int);
 void   not_found(int);
@@ -107,12 +109,15 @@ void
 set_header(int sockfd, const char *filepath)
 {
   char buf[1024];
+  char content_type[1024];
+
+  set_extension(et, filepath, content_type);
 
   sprintf(buf, "HTTP/1.1 200 OK\r\n");
   Write(sockfd, buf, strlen(buf));
   sprintf(buf, SERVER_STRING);
   Write(sockfd, buf, strlen(buf));
-  sprintf(buf, "Content-Type: text/plain\r\n");
+  sprintf(buf, "Content-Type: %s\r\n", content_type);
   Write(sockfd, buf, strlen(buf));
   sprintf(buf, "\r\n");
   Write(sockfd, buf, strlen(buf));
@@ -130,43 +135,67 @@ send_file(int sockfd, FILE *resource)
   }
 }
 
+void
+get_option(int argc, char **argv, uint32_t *port, char **base_path)
+{
+  int i = 1;
+  while (i < argc) {
+    if (strcmp(argv[i], "-p") == 0) {
+      *port = atoi(argv[i + 1]);
+      if (*port <= 1000)
+        err_sys("port should be larger than 1000"); // avoid the well-known ports
+      ++i;
+    } else if (strcmp(argv[i], "-b") == 0) {
+      *base_path = argv[i + 1];
+      ++i;
+    }
+    ++i;
+  }
+}
+
 int
 main(int argc, char **argv)
 {
-	int					listenfd, connfd;
+  int         listenfd, connfd;
   uint32_t    port = 4000;
   pid_t       childpid;
-	socklen_t			clilen;
-	struct sockaddr_in	cliaddr, servaddr;
+  socklen_t   clilen;
+  struct sockaddr_in	cliaddr, servaddr;
 
-	listenfd = Socket(AF_INET, SOCK_STREAM, 0);
+  get_option(argc, argv, &port, &base_path);
 
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin_family      = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port        = htons(port);
+  load_table(et); // load extension table
 
-	Bind(listenfd, (SA *) &servaddr, sizeof(servaddr));
+  printf("server running at port `%d` with `%s` as base path\n", port, base_path);
 
-	Listen(listenfd, LISTENQ);
+  listenfd = Socket(AF_INET, SOCK_STREAM, 0);
 
-	for ( ; ; ) {
-		clilen = sizeof(cliaddr);
-		if ( (connfd = accept(listenfd, (SA *) &cliaddr, &clilen)) < 0) {
-			if (errno == EINTR)
-				continue;		/* back to for() */
-			else
-				err_sys("accept error");
-		}
+  bzero(&servaddr, sizeof(servaddr));
+  servaddr.sin_family      = AF_INET;
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servaddr.sin_port        = htons(port);
 
-		if ( (childpid = Fork()) == 0) {	/* child process */
-			Close(listenfd);	/* close listening socket */
-			accept_request(connfd);	/* process the request */
+  Bind(listenfd, (SA *) &servaddr, sizeof(servaddr));
+
+  Listen(listenfd, LISTENQ);
+
+  for ( ; ; ) {
+    clilen = sizeof(cliaddr);
+    if ( (connfd = accept(listenfd, (SA *) &cliaddr, &clilen)) < 0) {
+      if (errno == EINTR)
+        continue;   /* back to for() */
+      else
+        err_sys("accept error");
+    }
+
+    if ( (childpid = Fork()) == 0) {  /* child process */
+      Close(listenfd);  /* close listening socket */
+      accept_request(connfd); /* process the request */
       Close(connfd);
-			exit(0);
-		}
-		Close(connfd);			/* parent closes connected socket */
-	}
+      exit(0);
+    }
+    Close(connfd);      /* parent closes connected socket */
+  }
 
   Close(listenfd);
 }
