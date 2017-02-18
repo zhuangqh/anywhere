@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+anywhere &
+pid=$!
+
+wrk 'http://localhost:8000/' \
+  -d 3 \
+  -c 50 \
+  -t 8
+
+kill $pid
