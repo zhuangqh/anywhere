@@ -4,8 +4,9 @@
 #define SERVER_STRING "Server: Anywhere\r\n"
 
 char *base_path = ".";
-char et_path[PATHLEN];
+char et_path[PATHLEN]; // extension table file path
 struct MIMEItem *et[HASHSIZE]; // extension table
+int show_access_log = 0;
 
 void   accept_request(int);
 void   not_found(int);
@@ -25,7 +26,9 @@ accept_request(int sockfd)
   int i = 0, j = 0;
 
   char_cnt = Readline(sockfd, buf, MAXLINE);
-  printf("%s", buf);
+
+  if (show_access_log)
+    printf("%s", buf);
 
   while ((i < sizeof(method) - 1) && !isspace(buf[i])) {
     method[i] = buf[i];
@@ -139,6 +142,8 @@ get_option(int argc, char **argv, uint32_t *port, char **base_path)
     } else if (strcmp(argv[i], "-b") == 0) {
       *base_path = argv[i + 1];
       ++i;
+    } else if (strcmp(argv[i], "-log") == 0) {
+      show_access_log = 1;
     }
     ++i;
   }

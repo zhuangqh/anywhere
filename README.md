@@ -21,6 +21,7 @@ $ make uninstall
 anywhere # start a static server with default port 8000, current directory as base path
 anywhere -p 8080 # change the port to 8080
 anywhere -b /some/path # change base path
+anywhere -log # print access log
 ```
 
 ## License
