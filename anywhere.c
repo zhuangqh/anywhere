@@ -93,9 +93,8 @@ serve_file(int sockfd, const char *filepath)
   } else {
     set_header(sockfd, filepath);
     send_file(sockfd, filefd);
+    Close(filefd);
   }
-
-  Close(filefd);
 }
 
 void
