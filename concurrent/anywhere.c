@@ -1,5 +1,5 @@
-#include "./common.h"
-#include "./extension.h"
+#include "../common.h"
+#include "../extension.h"
 
 #define SERVER_STRING "Server: Anywhere\r\n"
 
@@ -187,9 +187,12 @@ main(int argc, char **argv)
         err_sys("accept error");
     }
 
-    accept_request(connfd); /* process the request */
+    if ( (childpid = Fork()) == 0) {  /* child process */
+      Close(listenfd);  /* close listening socket */
+      accept_request(connfd); /* process the request */
+      Close(connfd);
+      exit(0);
+    }
     Close(connfd);      /* parent closes connected socket */
   }
-
-  Close(listenfd);
 }
