@@ -58,9 +58,11 @@ readlinebuf(void **vptrptr)
 /* end readline */
 
 ssize_t
-Readline(int fd, void *ptr, size_t maxlen)
+Readline(int fd, void *ptr, size_t maxlen, int is_new_fd)
 {
 	ssize_t		n;
+
+	if (is_new_fd) read_cnt = 0; // clear buffer;
 
 	if ( (n = readline(fd, ptr, maxlen)) < 0)
 		err_sys("readline error");

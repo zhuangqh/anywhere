@@ -25,7 +25,7 @@ accept_request(int sockfd)
   int char_cnt = 0;
   int i = 0, j = 0;
 
-  char_cnt = Readline(sockfd, buf, MAXLINE);
+  char_cnt = Readline(sockfd, buf, MAXLINE, 1);
 
   if (show_access_log)
     printf("%s", buf);
@@ -187,12 +187,7 @@ main(int argc, char **argv)
         err_sys("accept error");
     }
 
-    if ( (childpid = Fork()) == 0) {  /* child process */
-      Close(listenfd);  /* close listening socket */
-      accept_request(connfd); /* process the request */
-      Close(connfd);
-      exit(0);
-    }
+    accept_request(connfd); /* process the request */
     Close(connfd);      /* parent closes connected socket */
   }
 

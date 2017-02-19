@@ -39,7 +39,7 @@ int		 Socket(int, int, int);
 /* prototypes for our unix wrapper functions */
 void	 Close(int);
 pid_t	 Fork(void);
-ssize_t  Readline(int, void *, size_t);
+ssize_t  Readline(int, void *, size_t, int);
 void   Send(int, const void *, size_t, int);
 void   Write(int, void *, size_t);
 void   err_sys(const char*);
