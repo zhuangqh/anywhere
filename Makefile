@@ -4,6 +4,8 @@ LIB += ./wrapunix.c
 LIB += ./extension.c
 LIB += ./wrapthread.c
 
+LIBOBJS=$(LIB:.c=.o)
+
 GREEN=\033[0;32m
 NC=\033[0m # No Color
 
@@ -15,30 +17,40 @@ AWBinc = anywhere-concurrent
 AWBini = anywhere-iterative
 AWBint = anywhere-multithread
 
-all: install
+all: $(AWBinc) $(AWBini) $(AWBint)
 
-install: anywhere
-	@cp anywhere /usr/local/bin/anywhere
+install: anywhere-multithread
+	@cp anywhere-multithread /usr/local/bin/anywhere
 	@mkdir -p ~/.anywhere
 	@cp ./content-type-table ~/.anywhere/
 	@echo "$(GREEN)successfully install 'anywhere'$(NC)"
 
-anywhere:	iterative
+anywhere-concurrent: $(LIBOBJS)
+	gcc -Wall  $(LIBOBJS)  $(AWc) -o $(AWBinc)
 
-concurrent: $(LIB) $(AWc)
-	gcc -Wall  $(LIB)  $(AWc) -o $(AWBinc)
+anywhere-iterative: $(LIBOBJS)
+	gcc -Wall  $(LIBOBJS) $(AWi) -o $(AWBini)
 
-iterative: $(LIB) $(AWi)
-	gcc -Wall  $(LIB) $(AWi) -o $(AWBini)
+anywhere-multithread: $(LIBOBJS) thread.o
+	gcc -Wall  $(LIBOBJS) thread.o $(AWt) -o $(AWBint)
 
-multithread: $(LIB) $(AWt) ./multithread/thread.c
-	gcc -Wall  $(LIB) $(AWt) ./multithread/thread.c -o $(AWBint)
+extension.o: extension.c
 
-uninstall:
+readline.o: readline.c
+
+wrapunix.o: wrapunix.c
+
+wrapsock.o: wrapsock.c
+
+wrapthread.o: wrapthread.c
+
+thread.o:
+	gcc -c ./multithread/thread.c
+
+uninstall: clean
 	@rm -f /usr/local/bin/anywhere
 	@rm -rf ~/.anywhere
-	@rm -f $(AWBinc) $(AWBint) $(AWBini)
 	@echo "$(GREEN)successfully uninstall 'anywhere'$(NC)"
 
 clean:
-	rm -f $(AWBinc) $(AWBint) $(AWBini)
+	rm -f $(AWBinc) $(AWBint) $(AWBini) $(LIBOBJS) thread.o

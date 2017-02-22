@@ -161,9 +161,7 @@ int
 main(int argc, char **argv)
 {
   uint32_t    port = 8000;
-  pthread_t   newthread;
-  socklen_t   clilen;
-  struct sockaddr_in	cliaddr, servaddr;
+  struct sockaddr_in	servaddr;
   nthreads = THREAD_NUM;
 
   get_option(argc, argv, &port, &base_path, &nthreads);
