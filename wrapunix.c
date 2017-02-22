@@ -1,5 +1,15 @@
 #include "./common.h"
 
+void *
+Calloc(size_t n, size_t size)
+{
+	void	*ptr;
+
+	if ( (ptr = calloc(n, size)) == NULL)
+		err_sys("calloc error");
+	return(ptr);
+}
+
 void
 Close(int fd)
 {
@@ -15,6 +25,16 @@ Fork(void)
 	if ( (pid = fork()) == -1)
 		err_sys("fork error");
 	return(pid);
+}
+
+void *
+Malloc(size_t size)
+{
+	void	*ptr;
+
+	if ( (ptr = malloc(size)) == NULL)
+		err_sys("malloc error");
+	return(ptr);
 }
 
 void
