@@ -22,11 +22,11 @@ thread_main(void *arg)
 
   for ( ; ; ) {
     clilen = addrlen;
-      Pthread_mutex_lock(&mlock);
+    Pthread_mutex_lock(&mmlock);
     connfd = Accept(listenfd, cliaddr, &clilen);
-    Pthread_mutex_unlock(&mlock);
+    Pthread_mutex_unlock(&mmlock);
 
-    handler(connfd);		/* process request */
+    handler(connfd);		// process request
     Close(connfd);
   }
 }

@@ -15,7 +15,7 @@ pthread_t	*tptr;		/* array of Thread structures; calloc'ed */
 
 int				listenfd, nthreads;
 socklen_t		addrlen;
-pthread_mutex_t	mlock;
+pthread_mutex_t	mmlock;
 
 void  Pthread_create(pthread_t *, const pthread_attr_t *,
              void * (*)(void *), void *);

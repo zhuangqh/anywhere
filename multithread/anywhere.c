@@ -9,7 +9,7 @@ char *base_path = ".";
 char et_path[PATHLEN]; // extension table file path
 struct MIMEItem *et[HASHSIZE]; // extension table
 int show_access_log = 0;
-pthread_mutex_t	mlock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t	mmlock = PTHREAD_MUTEX_INITIALIZER;
 
 void   accept_request(int);
 void   not_found(int);
