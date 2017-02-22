@@ -1,10 +1,14 @@
-LIB = ./readline.c
-LIB += ./wrapsock.c
-LIB += ./wrapunix.c
-LIB += ./extension.c
-LIB += ./wrapthread.c
+SRCS = ./readline.c
+SRCS += ./wrapsock.c
+SRCS += ./wrapunix.c
+SRCS += ./extension.c
+SRCS += ./wrapthread.c
 
-LIBOBJS=$(LIB:.c=.o)
+FLAGS = -Wall -std=c11
+
+SRCSOBJS=$(SRCS:.c=.o)
+
+LIB = -lpthread
 
 GREEN=\033[0;32m
 NC=\033[0m # No Color
@@ -19,23 +23,23 @@ AWBint = anywhere-multithread
 
 all: $(AWBinc) $(AWBini) $(AWBint)
 
-install: anywhere-multithread
-	@cp anywhere-multithread /usr/local/bin/anywhere
+install: anywhere-concurrent
+	@cp anywhere-concurrent /usr/local/bin/anywhere
 	@mkdir -p ~/.anywhere
 	@cp ./content-type-table ~/.anywhere/
 	@echo "$(GREEN)successfully install 'anywhere'$(NC)"
 
-anywhere-concurrent: $(LIBOBJS)
-	gcc -Wall  $(LIBOBJS)  $(AWc) -o $(AWBinc)
+$(AWBinc): $(SRCSOBJS) lock.o processpool.o ./concurrent/anywhere.c
+	gcc $(FLAGS)  $(SRCSOBJS) lock.o processpool.o $(AWc) -o $(AWBinc) $(LIB)
 
-anywhere-iterative: $(LIBOBJS)
-	gcc -Wall  $(LIBOBJS) $(AWi) -o $(AWBini)
+$(AWBini): $(SRCSOBJS) ./iterative/anywhere.c
+	gcc $(FLAGS)  $(SRCSOBJS) $(AWi) -o $(AWBini) $(LIB)
 
-anywhere-multithread: $(LIBOBJS) thread.o
-	gcc -Wall  $(LIBOBJS) thread.o $(AWt) -o $(AWBint)
+$(AWBint): $(SRCSOBJS) thread.o ./multithread/anywhere.c
+	gcc $(FLAGS)  $(SRCSOBJS) thread.o $(AWt) -o $(AWBint) $(LIB)
 
 extension.o: extension.c
-
+	gcc -c $(FLAGS) extension.c
 readline.o: readline.c
 
 wrapunix.o: wrapunix.c
@@ -44,8 +48,14 @@ wrapsock.o: wrapsock.c
 
 wrapthread.o: wrapthread.c
 
-thread.o:
-	gcc -c ./multithread/thread.c
+thread.o: ./multithread/thread.c
+	gcc -c $(FLAGS) ./multithread/thread.c
+
+lock.o: ./concurrent/lock.c
+	gcc -c ./concurrent/lock.c
+
+processpool.o: ./concurrent/processpool.c
+	gcc -c ./concurrent/processpool.c
 
 uninstall: clean
 	@rm -f /usr/local/bin/anywhere
@@ -53,4 +63,4 @@ uninstall: clean
 	@echo "$(GREEN)successfully uninstall 'anywhere'$(NC)"
 
 clean:
-	rm -f $(AWBinc) $(AWBint) $(AWBini) $(LIBOBJS) thread.o
+	rm -f $(AWBinc) $(AWBint) $(AWBini) $(SRCSOBJS) thread.o lock.o processpool.o
