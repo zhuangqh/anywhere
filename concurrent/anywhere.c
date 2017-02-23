@@ -1,12 +1,18 @@
 #include "../common.h"
 #include "../extension.h"
+#include "./lock.h"
+#include "./processpool.h"
 
 #define SERVER_STRING "Server: Anywhere\r\n"
+#define CHILD_NUM 16 // default children number
 
 char *base_path = ".";
 char et_path[PATHLEN]; // extension table file path
 struct MIMEItem *et[HASHSIZE]; // extension table
 int show_access_log = 0;
+
+static int    nchildren;
+static pid_t  *pids;
 
 void   accept_request(int);
 void   not_found(int);
@@ -149,14 +155,28 @@ get_option(int argc, char **argv, uint32_t *port, char **base_path)
   }
 }
 
+void
+sig_int(int signo)
+{
+  int   i;
+
+    /* terminate all children */
+  for (i = 0; i < nchildren; i++)
+    kill(pids[i], SIGTERM);
+  while (wait(NULL) > 0) {} /* wait for all children */
+  if (errno != ECHILD)
+    err_sys("wait error");
+
+  exit(0);
+}
+
 int
 main(int argc, char **argv)
 {
-  int         listenfd, connfd;
+  int         listenfd;
   uint32_t    port = 8000;
-  pid_t       childpid;
-  socklen_t   clilen;
-  struct sockaddr_in	cliaddr, servaddr;
+  struct sockaddr_in	servaddr;
+  nchildren = CHILD_NUM;
 
   get_option(argc, argv, &port, &base_path);
 
@@ -178,21 +198,14 @@ main(int argc, char **argv)
 
   Listen(listenfd, LISTENQ);
 
-  for ( ; ; ) {
-    clilen = sizeof(cliaddr);
-    if ( (connfd = accept(listenfd, (SA *) &cliaddr, &clilen)) < 0) {
-      if (errno == EINTR)
-        continue;   /* back to for() */
-      else
-        err_sys("accept error");
-    }
+  pids = Calloc(nchildren, sizeof(pid_t));
 
-    if ( (childpid = Fork()) == 0) {  /* child process */
-      Close(listenfd);  /* close listening socket */
-      accept_request(connfd); /* process the request */
-      Close(connfd);
-      exit(0);
-    }
-    Close(connfd);      /* parent closes connected socket */
-  }
+  lock_init(NULL);
+  for (int i = 0; i < nchildren; i++)
+    pids[i] = child_make(i, listenfd, accept_request);	// parent returns
+
+  signal(SIGINT, sig_int);
+
+  for ( ; ; )
+    pause();	// everything done by children
 }

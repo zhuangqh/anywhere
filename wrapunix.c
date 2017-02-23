@@ -27,6 +27,13 @@ Fork(void)
 	return(pid);
 }
 
+void
+Ftruncate(int fd, off_t length)
+{
+	if (ftruncate(fd, length) == -1)
+		err_sys("ftruncate error");
+}
+
 void *
 Malloc(size_t size)
 {
@@ -35,6 +42,40 @@ Malloc(size_t size)
 	if ( (ptr = malloc(size)) == NULL)
 		err_sys("malloc error");
 	return(ptr);
+}
+
+void *
+Mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
+{
+	void	*ptr;
+
+	if ( (ptr = mmap(addr, len, prot, flags, fd, offset)) == ((void *) -1))
+		err_sys("mmap error");
+	return(ptr);
+}
+
+int
+Open(const char *pathname, int oflag, mode_t mode)
+{
+	int		fd;
+
+	if ( (fd = open(pathname, oflag, mode)) == -1) {
+		fprintf(stderr, "open error for %s\n", pathname);
+	}
+
+	return(fd);
+}
+
+int
+Shm_open(const char *pathname, int oflag, mode_t mode)
+{
+	int		fd;
+
+	if ( (fd = shm_open(pathname, oflag, mode)) == -1) {
+		fprintf(stderr, "open error for %s\n", pathname);
+	}
+
+	return(fd);
 }
 
 void

@@ -21,8 +21,6 @@ void   unimplemented(int);
 void
 accept_request(int sockfd)
 {
-  pthread_detach(pthread_self()); // no need to wait for this thread
-
   char buf[MAXLINE];
   char method[255];
   char url[255];

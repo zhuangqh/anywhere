@@ -12,6 +12,8 @@ thread_make(ReqHandler rh)
 void *
 thread_main(void *arg)
 {
+  pthread_detach(pthread_self()); // no need to wait for this thread
+
   Handler handler = (Handler)arg;
   int         connfd;
 
