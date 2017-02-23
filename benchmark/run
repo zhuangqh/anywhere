@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-anywhere &
-pid=$!
+printf "\ntesting$1\n"
 
-wrk 'http://localhost:8000/' \
-  -d 3 \
+$1 -p $2&
+
+URL='http://127.0.0.1:port/file'
+
+sleep 2
+
+wrk ${URL/port/$2} \
+  -d 5 \
   -c 50 \
   -t 8
-
-kill $pid
